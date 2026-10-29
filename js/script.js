@@ -1,132 +1,141 @@
-let diaAtual = 12;
+let diaAtual = null;
+let jogos = [];
 
-const jogos = [{
-        dia: 12,
-        modalidade: "Basquete",
-        icone: "🏀",
-        horario: "14:00",
-        local: "Ginásio",
-        time1: "ELETRO",
-        time2: "EDI",
-        placar1: 52,
-        placar2: 48,
-        status: "Finalizado"
-    },
+async function carregarJogos() {
+    const container = document.getElementById("jogos-do-dia");
 
-    {
-        dia: 12,
-        modalidade: "Futsal",
-        icone: "⚽",
-        horario: "16:00",
-        local: "Quadra CAEF",
-        time1: "TELE",
-        time2: "INFO",
-        placar1: 12,
-        placar2: 9,
-        status: "finalizado"
-    },
+    try {
+        const resposta = await fetch("/api/jogos");
 
-    {
-        dia: 13,
-        modalidade: "Vôlei",
-        icone: "🏐",
-        horario: "17:30",
-        local: "Ginásio",
-        time1: "ELETRO",
-        time2: "EDI",
-        placar1: null,
-        placar2: null,
-        status: "Em breve..."
-    },
-    {
-        dia: 14,
-        modalidade: "Basquete",
-        icone: "🏀",
-        horario: "15:00",
-        local: "Ginásio",
-        time1: "INFO",
-        time2: "TELE",
-        placar1: null,
-        placar2: null,
-        status: "Em breve..."
+        if (!resposta.ok) {
+            throw new Error("Não foi possível buscar os jogos.");
+        }
+
+        jogos = await resposta.json();
+
+        // Organiza as datas disponíveis, sem repetições.
+        const datas = [...new Set(
+            jogos
+            .map(jogo => jogo.dia)
+            .filter(Boolean)
+            .sort()
+        )];
+
+        if (datas.length === 0) {
+            container.innerHTML = "<p>Nenhum jogo cadastrado.</p>";
+            atualizarBotoes(datas);
+            return;
+        }
+
+        // Começa pela data mais antiga cadastrada.
+        diaAtual = datas[0];
+
+        mostrarJogos(datas);
+    } catch (erro) {
+        console.error("Erro ao carregar jogos:", erro);
+        container.innerHTML =
+            "<p>Não foi possível carregar os jogos. Tente atualizar a página.</p>";
     }
-];
-const primeiroDia = Math.min(...jogos.map(jogo => jogo.dia));
-const ultimoDia = Math.max(...jogos.map(jogo => jogo.dia));
-
-function atualizarBotoes() {
-    const botaoAnterior = document.getElementById("dia-anterior");
-    const botaoProximo = document.getElementById("proximo-dia");
-    botaoAnterior.disabled = diaAtual === primeiroDia;
-    botaoProximo.disabled = diaAtual === ultimoDia;
 }
 
-function mostrarJogos() {
+function atualizarBotoes(datas) {
+    const botaoAnterior = document.getElementById("dia-anterior");
+    const botaoProximo = document.getElementById("proximo-dia");
 
+    const indiceAtual = datas.indexOf(diaAtual);
+
+    botaoAnterior.disabled = indiceAtual <= 0;
+    botaoProximo.disabled =
+        indiceAtual === -1 || indiceAtual >= datas.length - 1;
+}
+
+function mostrarJogos(datas) {
     const container = document.getElementById("jogos-do-dia");
+    const elementoData = document.getElementById("data");
 
     container.innerHTML = "";
 
     const jogosDoDia = jogos.filter(jogo => jogo.dia === diaAtual);
 
+    // Mostra a data no formato dia/mês.
+    const [ano, mes, dia] = diaAtual.split("-");
+    elementoData.textContent = `${dia}/${mes}`;
+
+    if (jogosDoDia.length === 0) {
+        container.innerHTML = "<p>Não há jogos nesta data.</p>";
+    }
 
     jogosDoDia.forEach(jogo => {
-
         const card = document.createElement("div");
-
         card.classList.add("jogo");
 
+        const finalizado =
+            jogo.placarTime1 !== null &&
+            jogo.placarTime1 !== undefined &&
+            jogo.placarTime2 !== null &&
+            jogo.placarTime2 !== undefined;
 
-        if (jogo.placar1 === null && jogo.placar2 === null) {
+        const modalidade = jogo.esporte || "Esporte";
+        const horario = jogo.hora ?
+            jogo.hora.slice(0, 5) :
+            "Horário a definir";
 
-            card.innerHTML = `
-                <h2>${jogo.time1} x ${jogo.time2}</h2>
-                <h3>Jogo ainda não iniciado</h3>
-                <p>${jogo.modalidade}</p>
-                <p>${jogo.horario}</p>
-                <p>${jogo.local}</p>
-                <p>${jogo.status}</p>
-            `;
+        const time1 = (jogo.time1 || "A definir").trim();
+        const time2 = (jogo.time2 || "A definir").trim();
 
-        } else {
+        const placar = finalizado ?
+            `${jogo.placarTime1} x ${jogo.placarTime2}` :
+            "Jogo ainda não iniciado";
 
-            card.innerHTML = `
-                <h2>${jogo.time1} x ${jogo.time2}</h2>
-                <h3>${jogo.placar1} x ${jogo.placar2}</h3>
-                <p>${jogo.modalidade}</p>
-                <p>${jogo.horario}</p>
-                <p>${jogo.status}</p>
-            `;
-        }
+        // Cria o card usando textContent para inserir texto com segurança.
+        const titulo = document.createElement("h2");
+        titulo.textContent = `${time1} x ${time2}`;
 
+        const resultado = document.createElement("h3");
+        resultado.textContent = finalizado ? placar : "VS";
 
+        const esporte = document.createElement("p");
+        esporte.textContent = modalidade;
+
+        const hora = document.createElement("p");
+        hora.textContent = horario;
+
+        const status = document.createElement("p");
+        status.textContent = finalizado ?
+            "Finalizado" :
+            "Em breve";
+
+        card.append(titulo, resultado, esporte, hora, status);
         container.appendChild(card);
-
     });
-    atualizarBotoes();
+
+    atualizarBotoes(datas);
 }
 
+document.getElementById("dia-anterior").addEventListener("click", () => {
+    const datas = [...new Set(
+        jogos.map(jogo => jogo.dia).filter(Boolean).sort()
+    )];
 
-document.getElementById("dia-anterior").addEventListener("click", function() {
+    const indiceAtual = datas.indexOf(diaAtual);
 
-    diaAtual--;
-
-    document.getElementById("data").textContent = diaAtual + "/10";
-
-    mostrarJogos();
-
+    if (indiceAtual > 0) {
+        diaAtual = datas[indiceAtual - 1];
+        mostrarJogos(datas);
+    }
 });
 
+document.getElementById("proximo-dia").addEventListener("click", () => {
+    const datas = [...new Set(
+        jogos.map(jogo => jogo.dia).filter(Boolean).sort()
+    )];
 
-document.getElementById("proximo-dia").addEventListener("click", function() {
+    const indiceAtual = datas.indexOf(diaAtual);
 
-    diaAtual++;
-
-    document.getElementById("data").textContent = diaAtual + "/10";
-
-    mostrarJogos();
-
+    if (indiceAtual < datas.length - 1) {
+        diaAtual = datas[indiceAtual + 1];
+        mostrarJogos(datas);
+    }
 });
 
-
-mostrarJogos();
+carregarJogos();
