@@ -75,7 +75,7 @@ router.get('/classificacao', async(req, res) => {
                 </nav>
 
                 <div class="bg-success text-black text-center p-5">
-                    <h1>SEC</h1>
+                    <h1>Classificação</h1>
                     <h3>Classificação Geral</h3>
                 </div>
 
