@@ -119,10 +119,10 @@ router.get('/estatisticas', async (req, res) => {
                         Confira o desempenho dos atletas na Semana Esportiva e Cultural.
                     </p>
 
-                    <div class="text-center mt-4 mb-4">
+                    <div class="seletor-categoria">
                         <button
                             id="btnMasculino"
-                            class="btn btn-primary me-2"
+                            class="categoria-ativa"
                             onclick="mostrarCategoria('Masculino')"
                         >
                             Masculino
@@ -130,7 +130,6 @@ router.get('/estatisticas', async (req, res) => {
 
                         <button
                             id="btnFeminino"
-                            class="btn btn-outline-primary"
                             onclick="mostrarCategoria('Feminino')"
                         >
                             Feminino
@@ -167,19 +166,21 @@ router.get('/estatisticas', async (req, res) => {
                     const btnMasculino = document.getElementById('btnMasculino');
                     const btnFeminino = document.getElementById('btnFeminino');
 
-                    if (categoria === 'Masculino') {
-                        masculino.style.display = 'block';
-                        feminino.style.display = 'none';
+                    masculino.style.display =
+                        categoria === 'Masculino' ? 'block' : 'none';
 
-                        btnMasculino.className = 'btn btn-primary me-2';
-                        btnFeminino.className = 'btn btn-outline-primary';
-                    } else {
-                        masculino.style.display = 'none';
-                        feminino.style.display = 'block';
+                    feminino.style.display =
+                        categoria === 'Feminino' ? 'block' : 'none';
 
-                        btnFeminino.className = 'btn btn-primary';
-                        btnMasculino.className = 'btn btn-outline-primary me-2';
-                    }
+                    btnMasculino.classList.toggle(
+                        'categoria-ativa',
+                        categoria === 'Masculino'
+                    );
+
+                    btnFeminino.classList.toggle(
+                        'categoria-ativa',
+                        categoria === 'Feminino'
+                    );
                 }
             </script>
 
@@ -191,3 +192,4 @@ router.get('/estatisticas', async (req, res) => {
 });
 
 module.exports = router;
+    

@@ -518,3 +518,70 @@
                               width: calc(100% - 28px);
                           }
                       }
+                      /* Seletor de categoria */
+
+/* Seletor de categoria - usado nas três páginas */
+.seletor-categoria {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.seletor-categoria button {
+    padding: 10px 25px;
+    border: 2px solid #444;
+    border-radius: 8px;
+    background-color: #222;
+    color: #aaa;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+/* Masculino selecionado */
+#categoria-masculino.categoria-ativa,
+#btnMasculino.categoria-ativa {
+    background-color: #1769aa;
+    border-color: #1769aa;
+    color: white;
+    box-shadow: 0 0 10px rgba(23, 105, 170, 0.45);
+}
+
+/* Feminino selecionado */
+#categoria-feminino.categoria-ativa,
+#btnFeminino.categoria-ativa {
+    background-color: #c04483;
+    border-color: #c04483;
+    color: white;
+    box-shadow: 0 0 10px rgba(192, 68, 131, 0.45);
+}
+
+/* Efeito ao passar o mouse */
+.seletor-categoria button:hover:not(.categoria-ativa) {
+    border-color: #888;
+    color: white;
+}
+
+
+/* Masculino selecionado */
+#categoria-masculino.categoria-ativa {
+    background-color: #1769aa;
+    border-color: #1769aa;
+    color: white;
+    box-shadow: 0 0 10px rgba(23, 105, 170, 0.45);
+}
+
+/* Feminino selecionado */
+#categoria-feminino.categoria-ativa {
+    background-color: #c04483;
+    border-color: #c04483;
+    color: white;
+    box-shadow: 0 0 10px rgba(192, 68, 131, 0.45);
+}
+
+/* Efeito ao passar o mouse */
+.seletor-categoria button:hover:not(.categoria-ativa) {
+    border-color: #888;
+    color: white;
+}

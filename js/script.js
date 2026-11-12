@@ -2,10 +2,30 @@
 let diaAtual = null;
 let jogos = [];
 let categoriaAtual = "Masculino";
+let esporteAtual = "Todos";
+
+const container = document.getElementById("jogos-do-dia");
+const elementoData = document.getElementById("data");
+const botaoMasculino = document.getElementById("categoria-masculino");
+const botaoFeminino = document.getElementById("categoria-feminino");
+
+// Cria o seletor de esportes automaticamente.
+const areaEsporte = document.createElement("div");
+areaEsporte.classList.add("seletor-esporte");
+
+const labelEsporte = document.createElement("label");
+labelEsporte.textContent = "Esporte: ";
+labelEsporte.htmlFor = "filtro-esporte";
+
+const seletorEsporte = document.createElement("select");
+seletorEsporte.id = "filtro-esporte";
+
+areaEsporte.append(labelEsporte, seletorEsporte);
+
+// Coloca o seletor antes dos cards de jogos.
+container.parentNode.insertBefore(areaEsporte, container);
 
 async function carregarJogos() {
-    const container = document.getElementById("jogos-do-dia");
-
     try {
         const resposta = await fetch("/api/jogos");
 
@@ -15,40 +35,77 @@ async function carregarJogos() {
 
         jogos = await resposta.json();
 
-        const datas = obterDatas();
+        // Descobre os esportes cadastrados.
+        const esportes = [...new Set(
+            jogos
+                .map(jogo => jogo.esporte)
+                .filter(Boolean)
+        )].sort();
 
-        if (datas.length === 0) {
-            diaAtual = null;
-            mostrarJogos(datas);
-            return;
-        }
+        // Cria as opções do seletor.
+        seletorEsporte.innerHTML = "";
 
-        diaAtual = datas[0];
-        mostrarJogos(datas);
+        const opcaoTodos = document.createElement("option");
+        opcaoTodos.value = "Todos";
+        opcaoTodos.textContent = "Todos os esportes";
+        seletorEsporte.appendChild(opcaoTodos);
 
+        esportes.forEach(esporte => {
+            const opcao = document.createElement("option");
+            opcao.value = esporte;
+            opcao.textContent = esporte;
+            seletorEsporte.appendChild(opcao);
+        });
+
+        atualizarTela();
     } catch (erro) {
         console.error("Erro ao carregar jogos:", erro);
-
         container.innerHTML =
             "<p>Não foi possível carregar os jogos. Tente atualizar a página.</p>";
     }
 }
 
-// Retorna somente os jogos da categoria selecionada.
-function obterJogosCategoria() {
-    return jogos.filter(jogo =>
-        jogo.categoria === categoriaAtual
-    );
+// Retorna os jogos de acordo com os filtros selecionados.
+function filtrarJogos() {
+    return jogos.filter(jogo => {
+        const mesmaCategoria =
+            (jogo.categoria || "").toLowerCase() ===
+            categoriaAtual.toLowerCase();
+
+        const mesmoEsporte =
+            esporteAtual === "Todos" ||
+            jogo.esporte === esporteAtual;
+
+        return mesmaCategoria && mesmoEsporte;
+    });
 }
 
-// Organiza as datas disponíveis na categoria selecionada.
-function obterDatas() {
-    return [...new Set(
-        obterJogosCategoria()
+// Atualiza a data e os jogos quando algum filtro muda.
+function atualizarTela() {
+    const jogosFiltrados = filtrarJogos();
+
+    const datas = [...new Set(
+        jogosFiltrados
             .map(jogo => jogo.data_jogo)
             .filter(Boolean)
             .sort()
     )];
+
+    if (datas.length === 0) {
+        diaAtual = null;
+        elementoData.textContent = "--/--";
+        container.innerHTML = "<p>Não há jogos para esta seleção.</p>";
+        atualizarBotoes(datas);
+        return;
+    }
+
+    // Mantém a data atual se ela ainda tiver jogos.
+    // Caso contrário, começa pela primeira data disponível.
+    if (!datas.includes(diaAtual)) {
+        diaAtual = datas[0];
+    }
+
+    mostrarJogos(datas);
 }
 
 function atualizarBotoes(datas) {
@@ -58,66 +115,19 @@ function atualizarBotoes(datas) {
     const indiceAtual = datas.indexOf(diaAtual);
 
     botaoAnterior.disabled = indiceAtual <= 0;
-
     botaoProximo.disabled =
         indiceAtual === -1 || indiceAtual >= datas.length - 1;
 }
 
-function atualizarBotoesCategoria() {
-    const masculino = document.getElementById("categoria-masculino");
-    const feminino = document.getElementById("categoria-feminino");
-
-    masculino.classList.toggle(
-        "categoria-ativa",
-        categoriaAtual === "Masculino"
-    );
-
-    feminino.classList.toggle(
-        "categoria-ativa",
-        categoriaAtual === "Feminino"
-    );
-}
-
-function selecionarCategoria(categoria) {
-    categoriaAtual = categoria;
-
-    const datas = obterDatas();
-
-    // Começa pela primeira data disponível da categoria.
-    diaAtual = datas.length > 0 ? datas[0] : null;
-
-    atualizarBotoesCategoria();
-    mostrarJogos(datas);
-}
-
 function mostrarJogos(datas) {
-    const container = document.getElementById("jogos-do-dia");
-    const elementoData = document.getElementById("data");
-
     container.innerHTML = "";
 
-    const jogosDaCategoria = obterJogosCategoria();
-
-    if (datas.length === 0) {
-        elementoData.textContent = "--";
-        container.innerHTML =
-            "<p>Nenhum jogo cadastrado para esta categoria.</p>";
-
-        atualizarBotoes(datas);
-        return;
-    }
-
-    const jogosDoDia = jogosDaCategoria.filter(
+    const jogosDoDia = filtrarJogos().filter(
         jogo => jogo.data_jogo === diaAtual
     );
 
-    // Mostra a data no formato dia/mês.
-    const [ano, mes, dia] = diaAtual.split("-");
+    const [, mes, dia] = diaAtual.split("-");
     elementoData.textContent = `${dia}/${mes}`;
-
-    if (jogosDoDia.length === 0) {
-        container.innerHTML = "<p>Não há jogos nesta data.</p>";
-    }
 
     jogosDoDia.forEach(jogo => {
         const card = document.createElement("div");
@@ -130,7 +140,6 @@ function mostrarJogos(datas) {
             jogo.placar2 !== undefined;
 
         const modalidade = jogo.esporte || "Esporte";
-
         const horario = jogo.hora_jogo
             ? jogo.hora_jogo.slice(0, 5)
             : "Horário a definir";
@@ -155,9 +164,7 @@ function mostrarJogos(datas) {
         hora.textContent = horario;
 
         const status = document.createElement("p");
-        status.textContent = finalizado
-            ? "Finalizado"
-            : "Em breve";
+        status.textContent = finalizado ? "Finalizado" : "Em breve";
 
         card.append(titulo, resultado, esporte, hora, status);
         container.appendChild(card);
@@ -166,9 +173,46 @@ function mostrarJogos(datas) {
     atualizarBotoes(datas);
 }
 
-// Navegação entre os dias.
+// Seleção Masculino/Feminino.
+function selecionarCategoria(categoria) {
+    categoriaAtual = categoria;
+
+    botaoMasculino.classList.toggle(
+        "categoria-ativa",
+        categoria === "Masculino"
+    );
+
+    botaoFeminino.classList.toggle(
+        "categoria-ativa",
+        categoria === "Feminino"
+    );
+
+    atualizarTela();
+}
+
+botaoMasculino.addEventListener("click", () => {
+    selecionarCategoria("Masculino");
+});
+
+botaoFeminino.addEventListener("click", () => {
+    selecionarCategoria("Feminino");
+});
+
+// Seleção do esporte.
+seletorEsporte.addEventListener("change", () => {
+    esporteAtual = seletorEsporte.value;
+    atualizarTela();
+});
+
+// Navegação entre datas.
 document.getElementById("dia-anterior").addEventListener("click", () => {
-    const datas = obterDatas();
+    const datas = [...new Set(
+        filtrarJogos()
+            .map(jogo => jogo.data_jogo)
+            .filter(Boolean)
+            .sort()
+    )];
+
     const indiceAtual = datas.indexOf(diaAtual);
 
     if (indiceAtual > 0) {
@@ -178,7 +222,13 @@ document.getElementById("dia-anterior").addEventListener("click", () => {
 });
 
 document.getElementById("proximo-dia").addEventListener("click", () => {
-    const datas = obterDatas();
+    const datas = [...new Set(
+        filtrarJogos()
+            .map(jogo => jogo.data_jogo)
+            .filter(Boolean)
+            .sort()
+    )];
+
     const indiceAtual = datas.indexOf(diaAtual);
 
     if (indiceAtual < datas.length - 1) {
@@ -186,16 +236,5 @@ document.getElementById("proximo-dia").addEventListener("click", () => {
         mostrarJogos(datas);
     }
 });
-
-// Alternância entre masculino e feminino.
-document.getElementById("categoria-masculino")
-    .addEventListener("click", () => {
-        selecionarCategoria("Masculino");
-    });
-
-document.getElementById("categoria-feminino")
-    .addEventListener("click", () => {
-        selecionarCategoria("Feminino");
-    });
 
 carregarJogos();
