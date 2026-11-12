@@ -585,3 +585,66 @@
     border-color: #888;
     color: white;
 }
+
+/* Seletor de esportes */
+.seletor-esporte {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0 30px;
+    flex-wrap: wrap;
+}
+
+.seletor-esporte label {
+    color: #ddd;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.seletor-esporte select {
+    min-width: 190px;
+    padding: 11px 40px 11px 15px;
+
+    background-color: #222;
+    color: #fff;
+
+    border: 2px solid #444;
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+/* Quando o usuário seleciona ou clica no filtro */
+.seletor-esporte select:hover {
+    border-color: #1769aa;
+}
+
+.seletor-esporte select:focus {
+    border-color: #1769aa;
+    box-shadow: 0 0 10px rgba(23, 105, 170, 0.4);
+}
+
+/* Opções do menu */
+.seletor-esporte select option {
+    background-color: #222;
+    color: #fff;
+}
+
+/* Ajuste para celulares */
+@media (max-width: 600px) {
+    .seletor-esporte {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .seletor-esporte select {
+        width: 100%;
+        max-width: 280px;
+    }
+}
