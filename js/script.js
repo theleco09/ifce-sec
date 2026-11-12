@@ -16,7 +16,7 @@ async function carregarJogos() {
         // Organiza as datas disponíveis, sem repetições.
         const datas = [...new Set(
             jogos
-            .map(jogo => jogo.dia)
+            .map(jogo => jogo.data_jogo)
             .filter(Boolean)
             .sort()
         )];
@@ -55,7 +55,7 @@ function mostrarJogos(datas) {
 
     container.innerHTML = "";
 
-    const jogosDoDia = jogos.filter(jogo => jogo.dia === diaAtual);
+    const jogosDoDia = jogos.filter(jogo => jogo.data_jogo === diaAtual);
 
     // Mostra a data no formato dia/mês.
     const [ano, mes, dia] = diaAtual.split("-");
@@ -70,21 +70,21 @@ function mostrarJogos(datas) {
         card.classList.add("jogo");
 
         const finalizado =
-            jogo.placarTime1 !== null &&
-            jogo.placarTime1 !== undefined &&
-            jogo.placarTime2 !== null &&
-            jogo.placarTime2 !== undefined;
+            jogo.placar1 !== null &&
+            jogo.placar1 !== undefined &&
+            jogo.placar2 !== null &&
+            jogo.placar2 !== undefined;
 
         const modalidade = jogo.esporte || "Esporte";
-        const horario = jogo.hora ?
-            jogo.hora.slice(0, 5) :
+        const horario = jogo.hora_jogo ?
+            jogo.hora_jogo.slice(0, 5) :
             "Horário a definir";
 
-        const time1 = (jogo.time1 || "A definir").trim();
-        const time2 = (jogo.time2 || "A definir").trim();
+        const time1 = (jogo.equipe1 || "A definir").trim();
+        const time2 = (jogo.equipe2 || "A definir").trim();
 
         const placar = finalizado ?
-            `${jogo.placarTime1} x ${jogo.placarTime2}` :
+            `${jogo.placar1} x ${jogo.placar2}` :
             "Jogo ainda não iniciado";
 
         // Cria o card usando textContent para inserir texto com segurança.
@@ -114,7 +114,7 @@ function mostrarJogos(datas) {
 
 document.getElementById("dia-anterior").addEventListener("click", () => {
     const datas = [...new Set(
-        jogos.map(jogo => jogo.dia).filter(Boolean).sort()
+        jogos.map(jogo => jogo.data_jogo).filter(Boolean).sort()
     )];
 
     const indiceAtual = datas.indexOf(diaAtual);
@@ -127,7 +127,7 @@ document.getElementById("dia-anterior").addEventListener("click", () => {
 
 document.getElementById("proximo-dia").addEventListener("click", () => {
     const datas = [...new Set(
-        jogos.map(jogo => jogo.dia).filter(Boolean).sort()
+        jogos.map(jogo => jogo.data_jogo).filter(Boolean).sort()
     )];
 
     const indiceAtual = datas.indexOf(diaAtual);

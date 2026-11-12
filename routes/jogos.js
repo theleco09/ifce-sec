@@ -24,13 +24,13 @@ function escaparHTML(valor) {
 router.get('/api/jogos', async(req, res) => {
     try {
         const { data: jogos, error } = await supabase
-            .from('Jogos')
+            .from('sec_placar_jogos')
             .select('*')
-            .order('dia', { ascending: true })
-            .order('hora', { ascending: true });
+            .order('data_jogo', { ascending: true })
+            .order('hora_jogo', { ascending: true });
 
         if (error) {
-            console.error('Erro ao buscar jogos:', error.message);
+            console.error('Erro ao buscar jogos:', error);
             return res.status(500).json({
                 erro: 'Não foi possível carregar os jogos.'
             });
@@ -48,10 +48,10 @@ router.get('/jogos', async(req, res) => {
             console.log('ROTA NOVA DE JOGOS FOI EXECUTADA!');
             try {
                 const { data: jogos, error } = await supabase
-                    .from('Jogos')
+                    .from('sec_jogos')
                     .select('*')
-                    .order('dia', { ascending: true })
-                    .order('hora', { ascending: true });
+                    .order('data_jogo', { ascending: true })
+                    .order('hora_jogo', { ascending: true });
 
                 if (error) {
                     console.error('Erro ao buscar jogos:', error.message);
