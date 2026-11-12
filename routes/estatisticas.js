@@ -1,8 +1,9 @@
+
 const express = require('express');
 const router = express.Router();
 const supabase = require('../supabase');
 
-router.get('/estatisticas', async(req, res) => {
+router.get('/estatisticas', async (req, res) => {
     const { data, error } = await supabase
         .from('sec_ranking_atletas')
         .select('*')
@@ -13,7 +14,52 @@ router.get('/estatisticas', async(req, res) => {
         return res.status(500).send('Erro ao carregar as estatísticas.');
     }
 
-    let html = `
+    function gerarRanking(sexo) {
+        const atletas = data.filter(atleta => atleta.sexo === sexo);
+
+        const atletasPorEsporte = {};
+
+        atletas.forEach(atleta => {
+            if (!atletasPorEsporte[atleta.esporte]) {
+                atletasPorEsporte[atleta.esporte] = [];
+            }
+
+            atletasPorEsporte[atleta.esporte].push(atleta);
+        });
+
+        let html = '';
+
+        for (const esporte in atletasPorEsporte) {
+            html += `
+                <section class="painel">
+                    <h2>🏆 ${esporte}</h2>
+            `;
+
+            atletasPorEsporte[esporte].forEach((atleta, index) => {
+                html += `
+                    <div class="atleta">
+                        <div>
+                            <strong>${index + 1}º ${atleta.atleta}</strong>
+                            <p>${atleta.curso}</p>
+                        </div>
+
+                        <span class="pontos">
+                            ${atleta.total_pontos} pontos
+                        </span>
+                    </div>
+                `;
+            });
+
+            html += '</section>';
+        }
+
+        return html || '<p class="text-center">Nenhum atleta encontrado nesta categoria.</p>';
+    }
+
+    const rankingMasculino = gerarRanking('Masculino');
+    const rankingFeminino = gerarRanking('Feminino');
+
+    const html = `
         <!DOCTYPE html>
         <html lang="pt-BR">
 
@@ -72,45 +118,33 @@ router.get('/estatisticas', async(req, res) => {
                     <p class="subtitulo">
                         Confira o desempenho dos atletas na Semana Esportiva e Cultural.
                     </p>
-    `;
 
-    const atletasPorEsporte = {};
+                    <div class="text-center mt-4 mb-4">
+                        <button
+                            id="btnMasculino"
+                            class="btn btn-primary me-2"
+                            onclick="mostrarCategoria('Masculino')"
+                        >
+                            Masculino
+                        </button>
 
-    data.forEach(atleta => {
-        if (!atletasPorEsporte[atleta.esporte]) {
-            atletasPorEsporte[atleta.esporte] = [];
-        }
-
-        atletasPorEsporte[atleta.esporte].push(atleta);
-    });
-
-    for (const esporte in atletasPorEsporte) {
-        html += `
-            <section class="painel">
-                <h2>🏆 ${esporte}</h2>
-        `;
-
-        atletasPorEsporte[esporte].forEach((atleta, index) => {
-            html += `
-                <div class="atleta">
-                    <div>
-                        <strong>${index + 1}º ${atleta.atleta}</strong>
-                        <p>${atleta.curso}</p>
+                        <button
+                            id="btnFeminino"
+                            class="btn btn-outline-primary"
+                            onclick="mostrarCategoria('Feminino')"
+                        >
+                            Feminino
+                        </button>
                     </div>
 
-                    <span class="pontos">
-                        ${atleta.total_pontos} pontos
-                    </span>
-                </div>
-            `;
-        });
+                    <div id="rankingMasculino">
+                        ${rankingMasculino}
+                    </div>
 
-        html += `
-            </section>
-        `;
-    }
+                    <div id="rankingFeminino" style="display: none;">
+                        ${rankingFeminino}
+                    </div>
 
-    html += `
                 </section>
 
                 <div class="text-center mt-4 mb-5">
@@ -124,6 +158,31 @@ router.get('/estatisticas', async(req, res) => {
                 </footer>
 
             </main>
+
+            <script>
+                function mostrarCategoria(categoria) {
+                    const masculino = document.getElementById('rankingMasculino');
+                    const feminino = document.getElementById('rankingFeminino');
+
+                    const btnMasculino = document.getElementById('btnMasculino');
+                    const btnFeminino = document.getElementById('btnFeminino');
+
+                    if (categoria === 'Masculino') {
+                        masculino.style.display = 'block';
+                        feminino.style.display = 'none';
+
+                        btnMasculino.className = 'btn btn-primary me-2';
+                        btnFeminino.className = 'btn btn-outline-primary';
+                    } else {
+                        masculino.style.display = 'none';
+                        feminino.style.display = 'block';
+
+                        btnFeminino.className = 'btn btn-primary';
+                        btnMasculino.className = 'btn btn-outline-primary me-2';
+                    }
+                }
+            </script>
+
         </body>
         </html>
     `;

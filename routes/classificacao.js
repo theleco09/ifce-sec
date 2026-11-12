@@ -1,8 +1,9 @@
+
 const express = require('express');
 const router = express.Router();
 const supabase = require('../supabase');
 
-router.get('/classificacao', async(req, res) => {
+router.get('/classificacao', async (req, res) => {
     const { data, error } = await supabase
         .from('sec_classificacao')
         .select('*')
@@ -14,17 +15,24 @@ router.get('/classificacao', async(req, res) => {
         return res.status(500).send('Erro ao carregar classificação.');
     }
 
-    const linhas = data.map((item, index) => `
-        <tr>
-            <td>${index + 1}º</td>
-            <td>${item.curso}</td>
-            <td>${item.jogos}</td>
-            <td>${item.vitorias}</td>
-            <td>${item.empates}</td>
-            <td>${item.derrotas}</td>
-            <td><strong>${item.pontos}</strong></td>
-        </tr>
-    `).join('');
+    function gerarLinhas(categoria) {
+        const cursos = data.filter(item => item.categoria === categoria);
+
+        return cursos.map((item, index) => `
+            <tr>
+                <td>${index + 1}º</td>
+                <td>${item.curso}</td>
+                <td>${item.jogos}</td>
+                <td>${item.vitorias}</td>
+                <td>${item.empates}</td>
+                <td>${item.derrotas}</td>
+                <td><strong>${item.pontos}</strong></td>
+            </tr>
+        `).join('');
+    }
+
+    const linhasMasculino = gerarLinhas('Masculino');
+    const linhasFeminino = gerarLinhas('Feminino');
 
     res.send(`
         <!DOCTYPE html>
@@ -39,7 +47,6 @@ router.get('/classificacao', async(req, res) => {
             <link
                 href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
                 rel="stylesheet"
-                integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
                 crossorigin="anonymous"
             >
 
@@ -87,6 +94,24 @@ router.get('/classificacao', async(req, res) => {
                         da Semana Esportiva e Cultural.
                     </p>
 
+                    <div class="text-center mt-4 mb-4">
+                        <button
+                            id="btnMasculino"
+                            class="btn btn-primary me-2"
+                            onclick="mostrarCategoria('Masculino')"
+                        >
+                            Masculino
+                        </button>
+
+                        <button
+                            id="btnFeminino"
+                            class="btn btn-outline-primary"
+                            onclick="mostrarCategoria('Feminino')"
+                        >
+                            Feminino
+                        </button>
+                    </div>
+
                     <div class="table-responsive mt-4">
                         <table class="table table-bordered table-striped text-center">
                             <thead class="table-dark">
@@ -101,18 +126,42 @@ router.get('/classificacao', async(req, res) => {
                                 </tr>
                             </thead>
 
-                            <tbody>
-                                ${linhas}
+                            <tbody id="tabelaClassificacao">
+                                ${linhasMasculino}
                             </tbody>
                         </table>
-                        <div class="text-center mt-4 mb-5">
-    <a href="/" class="btn btn-secondary">
-        Voltar ao início
-    </a>
-</div>
+                    </div>
+
+                    <div class="text-center mt-4 mb-5">
+                        <a href="/" class="btn btn-secondary">
+                            Voltar ao início
+                        </a>
                     </div>
                 </div>
             </main>
+
+            <script>
+                const linhasMasculino = ${JSON.stringify(linhasMasculino)};
+                const linhasFeminino = ${JSON.stringify(linhasFeminino)};
+
+                function mostrarCategoria(categoria) {
+                    const tabela = document.getElementById('tabelaClassificacao');
+                    const btnMasculino = document.getElementById('btnMasculino');
+                    const btnFeminino = document.getElementById('btnFeminino');
+
+                    if (categoria === 'Masculino') {
+                        tabela.innerHTML = linhasMasculino;
+
+                        btnMasculino.className = 'btn btn-primary me-2';
+                        btnFeminino.className = 'btn btn-outline-primary';
+                    } else {
+                        tabela.innerHTML = linhasFeminino;
+
+                        btnFeminino.className = 'btn btn-primary';
+                        btnMasculino.className = 'btn btn-outline-primary me-2';
+                    }
+                }
+            </script>
         </body>
         </html>
     `);
